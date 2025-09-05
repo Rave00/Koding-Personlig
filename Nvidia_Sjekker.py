@@ -1,6 +1,5 @@
 # Sjekker Nvidias nettside om tilgjengelige grafikkort.
 
-from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from bs4 import BeautifulSoup
 import smtplib
@@ -35,18 +34,17 @@ def send_email():
     print("📧 Epost sendt!")
 
 def sjekk_lager():
-    response =  requests.get(URL)
-    soup = BeautifulSoup(response.text, "html.parser")
+    try:
+        response =  requests.get(URL, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
 
-    if "Kjøp nå" in soup.get_text():
-        send_email("✅ Varen er på lager!", f"Sjekk linken: {URL}")
-        print("Varen er på lager!")
-    else:
-        print("Varen er ikke på lager.")
+        if "Kjøp nå" in soup.get_text():
+            send_email("✅ Varen er på lager!", f"Sjekk linken: {URL}")
+            print("Varen er på lager!")
+        else:
+            print("Varen er ikke på lager.")
+    except Exception as e:
+        print("Feil under sjekk")
 
-
-scheduler = BlockingScheduler()
-# Kjør hver dag kl. 12:00 UTC (tilsvarer 13:00 norsk tid på vinter, 14:00 sommer)
-scheduler.add_job(sjekk_lager, 'cron', hour=12, minute=0)
-scheduler.start()
-
+if __name__ == "__main__":
+    sjekk_lager()
